@@ -1,198 +1,97 @@
-// Quiz Application Logic
-class QuizApp {
-    constructor() {
-        this.currentQuestion = 0;
-        this.score = 0;
-        this.wrongAnswers = 0;
-        this.isAnswered = false;
-        
-        // DOM Elements
-        this.welcomeScreen = document.getElementById('welcome-screen');
-        this.quizScreen = document.getElementById('quiz-screen');
-        this.resultsScreen = document.getElementById('results-screen');
-        
-        this.startBtn = document.getElementById('start-btn');
-        this.nextBtn = document.getElementById('next-btn');
-        this.restartBtn = document.getElementById('restart-btn');
-        
-        this.questionText = document.getElementById('question-text');
-        this.answersContainer = document.getElementById('answers-container');
-        this.feedback = document.getElementById('feedback');
-        this.questionCounter = document.getElementById('question-counter');
-        this.progressFill = document.getElementById('progress-fill');
-        this.currentScoreEl = document.getElementById('current-score');
-        
-        this.finalScoreEl = document.getElementById('final-score');
-        this.correctAnswersEl = document.getElementById('correct-answers');
-        this.wrongAnswersEl = document.getElementById('wrong-answers');
-        this.percentageEl = document.getElementById('percentage');
-        this.resultMessage = document.getElementById('result-message');
-        this.resultDescription = document.getElementById('result-description');
-        
-        this.initEventListeners();
-    }
-    
-    initEventListeners() {
-        this.startBtn.addEventListener('click', () => this.startQuiz());
-        this.nextBtn.addEventListener('click', () => this.nextQuestion());
-        this.restartBtn.addEventListener('click', () => this.restartQuiz());
-    }
-    
-    startQuiz() {
-        this.currentQuestion = 0;
-        this.score = 0;
-        this.wrongAnswers = 0;
-        this.showScreen('quiz');
-        this.loadQuestion();
-    }
-    
-    showScreen(screen) {
-        this.welcomeScreen.classList.remove('active');
-        this.quizScreen.classList.remove('active');
-        this.resultsScreen.classList.remove('active');
-        
-        switch(screen) {
-            case 'welcome':
-                this.welcomeScreen.classList.add('active');
-                break;
-            case 'quiz':
-                this.quizScreen.classList.add('active');
-                break;
-            case 'results':
-                this.resultsScreen.classList.add('active');
-                break;
-        }
-    }
-    
-    loadQuestion() {
-        this.isAnswered = false;
-        this.nextBtn.style.display = 'none';
-        this.feedback.classList.remove('show', 'correct', 'wrong');
-        
-        const question = quizData[this.currentQuestion];
-        
-        // Update question text
-        this.questionText.textContent = question.question;
-        
-        // Update progress
-        const progress = ((this.currentQuestion + 1) / quizData.length) * 100;
-        this.progressFill.style.width = progress + '%';
-        this.questionCounter.textContent = `Frage ${this.currentQuestion + 1} von ${quizData.length}`;
-        
-        // Update score display
-        this.currentScoreEl.textContent = this.score;
-        
-        // Load answers
-        this.answersContainer.innerHTML = '';
-        question.answers.forEach((answer, index) => {
-            const button = document.createElement('button');
-            button.className = 'answer-btn';
-            button.textContent = answer;
-            button.addEventListener('click', () => this.selectAnswer(index));
-            this.answersContainer.appendChild(button);
-        });
-    }
-    
-    selectAnswer(selectedIndex) {
-        if (this.isAnswered) return;
-        
-        this.isAnswered = true;
-        const question = quizData[this.currentQuestion];
-        const answerButtons = this.answersContainer.querySelectorAll('.answer-btn');
-        
-        // Disable all buttons
-        answerButtons.forEach(btn => btn.disabled = true);
-        
-        // Check if answer is correct
-        const isCorrect = selectedIndex === question.correct;
-        
-        if (isCorrect) {
-            this.score++;
-            answerButtons[selectedIndex].classList.add('correct');
-            this.showFeedback(true, question.explanation);
-        } else {
-            this.wrongAnswers++;
-            answerButtons[selectedIndex].classList.add('wrong');
-            answerButtons[question.correct].classList.add('correct');
-            this.showFeedback(false, question.explanation);
-        }
-        
-        // Update score
-        this.currentScoreEl.textContent = this.score;
-        
-        // Show next button
-        this.nextBtn.style.display = 'block';
-    }
-    
-    showFeedback(isCorrect, explanation) {
-        this.feedback.classList.add('show');
-        this.feedback.classList.add(isCorrect ? 'correct' : 'wrong');
-        
-        const icon = isCorrect ? '✅' : '❌';
-        const title = isCorrect ? '<strong>Richtig!</strong>' : '<strong>Falsch!</strong>';
-        
-        this.feedback.innerHTML = `
-            <div style="display: flex; align-items: start; gap: 10px;">
-                <span style="font-size: 1.5rem;">${icon}</span>
-                <div>
-                    ${title}
-                    <p style="margin-top: 8px;">${explanation}</p>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>American vs. British English Quiz - High Schools USA</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="screen active">
+            <div class="header">
+                <h1>🎓 High School Quiz</h1>
+                <p class="subtitle">American English vs. British English</p>
+            </div>
+            <div class="welcome-content">
+                <div class="flag-container">
+                    <span class="flag">🇺🇸</span>
+                    <span class="vs">VS</span>
+                    <span class="flag">🇬🇧</span>
+                </div>
+                <h2>Willkommen zum High School Quiz!</h2>
+                <p>Teste dein Wissen über die Unterschiede zwischen amerikanischen und britischen High Schools.</p>
+                <ul class="quiz-info">
+                    <li>📝 15 Fragen</li>
+                    <li>⏱️ Keine Zeitbegrenzung</li>
+                    <li>🎯 Sofortiges Feedback</li>
+                    <li>📊 Deine Punktzahl am Ende</li>
+                </ul>
+                <button id="start-btn" class="btn btn-primary">Quiz starten</button>
+            </div>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-header">
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                    <span id="question-counter" class="question-counter">Frage 1 von 15</span>
+                </div>
+                <div class="score-display">
+                    <span>Punkte: <strong id="current-score">0</strong></span>
                 </div>
             </div>
-        `;
-    }
-    
-    nextQuestion() {
-        this.currentQuestion++;
-        
-        if (this.currentQuestion < quizData.length) {
-            this.loadQuestion();
-        } else {
-            this.showResults();
-        }
-    }
-    
-    showResults() {
-        this.showScreen('results');
-        
-        const percentage = Math.round((this.score / quizData.length) * 100);
-        
-        // Update statistics
-        this.finalScoreEl.textContent = this.score;
-        this.correctAnswersEl.textContent = this.score;
-        this.wrongAnswersEl.textContent = this.wrongAnswers;
-        this.percentageEl.textContent = percentage + '%';
-        
-        // Determine result message based on score
-        let message, description;
-        
-        if (percentage >= 90) {
-            message = "🌟 Hervorragend!";
-            description = "Du bist ein echter Experte für amerikanische und britische High Schools! Dein Wissen ist ausgezeichnet!";
-        } else if (percentage >= 75) {
-            message = "🎯 Sehr gut!";
-            description = "Du hast ein sehr gutes Verständnis für die Unterschiede zwischen amerikanischen und britischen High Schools!";
-        } else if (percentage >= 60) {
-            message = "👍 Gut gemacht!";
-            description = "Du kennst dich schon recht gut aus. Mit etwas mehr Übung wirst du zum Experten!";
-        } else if (percentage >= 40) {
-            message = "📚 Nicht schlecht!";
-            description = "Du hast einige richtige Antworten gegeben. Lies dir die Erklärungen durch und versuche es nochmal!";
-        } else {
-            message = "💪 Weiter üben!";
-            description = "Die Unterschiede zwischen den Schulsystemen sind nicht einfach. Versuche es nochmal und lies die Erklärungen aufmerksam!";
-        }
-        
-        this.resultMessage.textContent = message;
-        this.resultDescription.textContent = description;
-    }
-    
-    restartQuiz() {
-        this.showScreen('welcome');
-    }
-}
 
-// Initialize quiz when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    const quiz = new QuizApp();
-});
+            <div class="quiz-content">
+                <h2 id="question-text" class="question-text"></h2>
+                <div id="answers-container" class="answers-container"></div>
+                <div id="feedback" class="feedback"></div>
+                <button id="next-btn" class="btn btn-secondary" style="display: none;">Nächste Frage</button>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="screen">
+            <div class="results-content">
+                <h1>🎉 Quiz abgeschlossen!</h1>
+                <div class="score-circle">
+                    <div class="score-text">
+                        <span id="final-score" class="final-score">0</span>
+                        <span class="score-label">/ 15</span>
+                    </div>
+                </div>
+                <h2 id="result-message"></h2>
+                <div id="result-description" class="result-description"></div>
+                
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-value" id="correct-answers">0</div>
+                        <div class="stat-label">Richtig</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">❌</div>
+                        <div class="stat-value" id="wrong-answers">0</div>
+                        <div class="stat-label">Falsch</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-value" id="percentage">0%</div>
+                        <div class="stat-label">Erfolgsquote</div>
+                    </div>
+                </div>
+
+                <button id="restart-btn" class="btn btn-primary">Quiz wiederholen</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/quiz-data.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
