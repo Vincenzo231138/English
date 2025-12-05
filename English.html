@@ -1,196 +1,198 @@
-# 🎓 American vs. British English Quiz - High Schools USA
+// Quiz Application Logic
+class QuizApp {
+    constructor() {
+        this.currentQuestion = 0;
+        this.score = 0;
+        this.wrongAnswers = 0;
+        this.isAnswered = false;
+        
+        // DOM Elements
+        this.welcomeScreen = document.getElementById('welcome-screen');
+        this.quizScreen = document.getElementById('quiz-screen');
+        this.resultsScreen = document.getElementById('results-screen');
+        
+        this.startBtn = document.getElementById('start-btn');
+        this.nextBtn = document.getElementById('next-btn');
+        this.restartBtn = document.getElementById('restart-btn');
+        
+        this.questionText = document.getElementById('question-text');
+        this.answersContainer = document.getElementById('answers-container');
+        this.feedback = document.getElementById('feedback');
+        this.questionCounter = document.getElementById('question-counter');
+        this.progressFill = document.getElementById('progress-fill');
+        this.currentScoreEl = document.getElementById('current-score');
+        
+        this.finalScoreEl = document.getElementById('final-score');
+        this.correctAnswersEl = document.getElementById('correct-answers');
+        this.wrongAnswersEl = document.getElementById('wrong-answers');
+        this.percentageEl = document.getElementById('percentage');
+        this.resultMessage = document.getElementById('result-message');
+        this.resultDescription = document.getElementById('result-description');
+        
+        this.initEventListeners();
+    }
+    
+    initEventListeners() {
+        this.startBtn.addEventListener('click', () => this.startQuiz());
+        this.nextBtn.addEventListener('click', () => this.nextQuestion());
+        this.restartBtn.addEventListener('click', () => this.restartQuiz());
+    }
+    
+    startQuiz() {
+        this.currentQuestion = 0;
+        this.score = 0;
+        this.wrongAnswers = 0;
+        this.showScreen('quiz');
+        this.loadQuestion();
+    }
+    
+    showScreen(screen) {
+        this.welcomeScreen.classList.remove('active');
+        this.quizScreen.classList.remove('active');
+        this.resultsScreen.classList.remove('active');
+        
+        switch(screen) {
+            case 'welcome':
+                this.welcomeScreen.classList.add('active');
+                break;
+            case 'quiz':
+                this.quizScreen.classList.add('active');
+                break;
+            case 'results':
+                this.resultsScreen.classList.add('active');
+                break;
+        }
+    }
+    
+    loadQuestion() {
+        this.isAnswered = false;
+        this.nextBtn.style.display = 'none';
+        this.feedback.classList.remove('show', 'correct', 'wrong');
+        
+        const question = quizData[this.currentQuestion];
+        
+        // Update question text
+        this.questionText.textContent = question.question;
+        
+        // Update progress
+        const progress = ((this.currentQuestion + 1) / quizData.length) * 100;
+        this.progressFill.style.width = progress + '%';
+        this.questionCounter.textContent = `Frage ${this.currentQuestion + 1} von ${quizData.length}`;
+        
+        // Update score display
+        this.currentScoreEl.textContent = this.score;
+        
+        // Load answers
+        this.answersContainer.innerHTML = '';
+        question.answers.forEach((answer, index) => {
+            const button = document.createElement('button');
+            button.className = 'answer-btn';
+            button.textContent = answer;
+            button.addEventListener('click', () => this.selectAnswer(index));
+            this.answersContainer.appendChild(button);
+        });
+    }
+    
+    selectAnswer(selectedIndex) {
+        if (this.isAnswered) return;
+        
+        this.isAnswered = true;
+        const question = quizData[this.currentQuestion];
+        const answerButtons = this.answersContainer.querySelectorAll('.answer-btn');
+        
+        // Disable all buttons
+        answerButtons.forEach(btn => btn.disabled = true);
+        
+        // Check if answer is correct
+        const isCorrect = selectedIndex === question.correct;
+        
+        if (isCorrect) {
+            this.score++;
+            answerButtons[selectedIndex].classList.add('correct');
+            this.showFeedback(true, question.explanation);
+        } else {
+            this.wrongAnswers++;
+            answerButtons[selectedIndex].classList.add('wrong');
+            answerButtons[question.correct].classList.add('correct');
+            this.showFeedback(false, question.explanation);
+        }
+        
+        // Update score
+        this.currentScoreEl.textContent = this.score;
+        
+        // Show next button
+        this.nextBtn.style.display = 'block';
+    }
+    
+    showFeedback(isCorrect, explanation) {
+        this.feedback.classList.add('show');
+        this.feedback.classList.add(isCorrect ? 'correct' : 'wrong');
+        
+        const icon = isCorrect ? '✅' : '❌';
+        const title = isCorrect ? '<strong>Richtig!</strong>' : '<strong>Falsch!</strong>';
+        
+        this.feedback.innerHTML = `
+            <div style="display: flex; align-items: start; gap: 10px;">
+                <span style="font-size: 1.5rem;">${icon}</span>
+                <div>
+                    ${title}
+                    <p style="margin-top: 8px;">${explanation}</p>
+                </div>
+            </div>
+        `;
+    }
+    
+    nextQuestion() {
+        this.currentQuestion++;
+        
+        if (this.currentQuestion < quizData.length) {
+            this.loadQuestion();
+        } else {
+            this.showResults();
+        }
+    }
+    
+    showResults() {
+        this.showScreen('results');
+        
+        const percentage = Math.round((this.score / quizData.length) * 100);
+        
+        // Update statistics
+        this.finalScoreEl.textContent = this.score;
+        this.correctAnswersEl.textContent = this.score;
+        this.wrongAnswersEl.textContent = this.wrongAnswers;
+        this.percentageEl.textContent = percentage + '%';
+        
+        // Determine result message based on score
+        let message, description;
+        
+        if (percentage >= 90) {
+            message = "🌟 Hervorragend!";
+            description = "Du bist ein echter Experte für amerikanische und britische High Schools! Dein Wissen ist ausgezeichnet!";
+        } else if (percentage >= 75) {
+            message = "🎯 Sehr gut!";
+            description = "Du hast ein sehr gutes Verständnis für die Unterschiede zwischen amerikanischen und britischen High Schools!";
+        } else if (percentage >= 60) {
+            message = "👍 Gut gemacht!";
+            description = "Du kennst dich schon recht gut aus. Mit etwas mehr Übung wirst du zum Experten!";
+        } else if (percentage >= 40) {
+            message = "📚 Nicht schlecht!";
+            description = "Du hast einige richtige Antworten gegeben. Lies dir die Erklärungen durch und versuche es nochmal!";
+        } else {
+            message = "💪 Weiter üben!";
+            description = "Die Unterschiede zwischen den Schulsystemen sind nicht einfach. Versuche es nochmal und lies die Erklärungen aufmerksam!";
+        }
+        
+        this.resultMessage.textContent = message;
+        this.resultDescription.textContent = description;
+    }
+    
+    restartQuiz() {
+        this.showScreen('welcome');
+    }
+}
 
-Eine interaktive Quiz-Website über die Unterschiede zwischen amerikanischem und britischem Englisch im Kontext von High Schools in den USA.
-
-## 📋 Projektübersicht
-
-Dieses Projekt ist eine vollständig funktionale, responsive Quiz-Anwendung, die Nutzern hilft, ihr Wissen über die Unterschiede zwischen amerikanischen und britischen High Schools zu testen und zu erweitern.
-
-### 🎯 Hauptmerkmale
-
-- **15 umfassende Quiz-Fragen** zu Themen wie:
-  - Schulbezeichnungen und Jahrgangsstufen
-  - Schuljahr und Ferienstruktur
-  - Tagesablauf und Zeitpläne
-  - Fächer und Spezialisierung
-  - Schulkultur und Traditionen
-  - College-/Universitätsvorbereitung
-  - Benotungssysteme
-
-- **Interaktive Benutzeroberfläche**:
-  - Willkommensbildschirm mit Anleitung
-  - Live-Fortschrittsanzeige
-  - Echtzeit-Punktestand
-  - Sofortiges Feedback nach jeder Antwort
-  - Detaillierte Erklärungen zu jeder Frage
-  - Zusammenfassende Ergebnisseite
-
-- **Modernes Design**:
-  - Ansprechendes Gradient-Design
-  - Animierte Elemente
-  - Vollständig responsive für alle Geräte
-  - Benutzerfreundliche Navigation
-
-## 🚀 Funktionen
-
-### Bereits implementierte Features
-
-✅ **Willkommensbildschirm**
-- Übersicht über das Quiz
-- Informationen zu Anzahl der Fragen
-- Start-Button
-
-✅ **Quiz-Modus**
-- Fortschrittsbalken
-- Fragenzähler
-- Live-Punkteanzeige
-- Multiple-Choice-Antworten
-- Visuelles Feedback (richtig/falsch)
-- Detaillierte Erklärungen
-
-✅ **Ergebnisbildschirm**
-- Gesamtpunktzahl
-- Anzahl richtiger/falscher Antworten
-- Erfolgsquote in Prozent
-- Personalisierte Bewertungsnachricht
-- Möglichkeit zum Neustarten
-
-✅ **Responsive Design**
-- Optimiert für Desktop, Tablet und Mobile
-- Flexible Layouts
-- Touch-freundliche Buttons
-
-## 📁 Projektstruktur
-
-```
-quiz-website/
-│
-├── index.html              # Haupt-HTML-Datei
-├── css/
-│   └── style.css          # Alle Styles und Animationen
-├── js/
-│   ├── quiz-data.js       # Quiz-Fragen und -Daten
-│   └── main.js            # Quiz-Logik und Interaktivität
-└── README.md              # Projektdokumentation
-```
-
-## 🎨 Design-Eigenschaften
-
-- **Farben**: Moderne Gradient-Farbpalette (Lila/Blau)
-- **Typografie**: Inter Font-Familie
-- **Animationen**: Smooth transitions und fade-ins
-- **Icons**: Emoji-basierte Icons für bessere Benutzerfreundlichkeit
-- **Layout**: Flexbox und CSS Grid für responsive Struktur
-
-## 💻 Technologien
-
-- **HTML5**: Semantische Struktur
-- **CSS3**: Moderne Styles, Flexbox, Grid, Animationen
-- **JavaScript (ES6+)**: Objektorientierte Quiz-Logik
-- **Google Fonts**: Inter Font
-
-## 🎮 Verwendung
-
-1. Öffnen Sie `index.html` in einem modernen Webbrowser
-2. Klicken Sie auf "Quiz starten"
-3. Lesen Sie jede Frage sorgfältig
-4. Wählen Sie eine Antwort aus
-5. Erhalten Sie sofortiges Feedback
-6. Klicken Sie auf "Nächste Frage"
-7. Sehen Sie Ihre Ergebnisse am Ende
-8. Optional: Quiz wiederholen
-
-## 📊 Quiz-Inhalt
-
-### Themenbereiche:
-
-1. **Schulbezeichnungen** (High School vs. Secondary School)
-2. **Jahrgangsstufen** (Grades vs. Years)
-3. **Ferienstruktur** (Semester vs. Trimester)
-4. **Schulzeiten** (7:30 vs. 8:30 Start)
-5. **Schuluniformen** (selten in USA, Pflicht in GB)
-6. **Schulkultur** (Prom, Homecoming, School Spirit)
-7. **Prüfungen** (SAT/ACT vs. GCSE/A-Levels)
-8. **Spezialisierung** (College vs. Sixth Form)
-9. **Benotung** (A-F vs. 9-1/A*-E)
-10. **Bewerbungsprozess** (außerschulische Aktivitäten)
-
-## 🔄 Funktionsweise
-
-### Quiz-Flow:
-1. **Willkommensbildschirm** → Benutzer startet Quiz
-2. **Quiz-Modus** → 15 Fragen nacheinander
-3. **Pro Frage**: 
-   - Frage anzeigen
-   - Antworten präsentieren
-   - Antwort auswählen
-   - Feedback geben
-   - Zur nächsten Frage
-4. **Ergebnisbildschirm** → Zusammenfassung und Bewertung
-
-### Bewertungssystem:
-- **90-100%**: Hervorragend! 🌟
-- **75-89%**: Sehr gut! 🎯
-- **60-74%**: Gut gemacht! 👍
-- **40-59%**: Nicht schlecht! 📚
-- **0-39%**: Weiter üben! 💪
-
-## 🌐 Browser-Kompatibilität
-
-- ✅ Chrome (empfohlen)
-- ✅ Firefox
-- ✅ Safari
-- ✅ Edge
-- ✅ Opera
-
-## 📱 Responsive Breakpoints
-
-- **Desktop**: > 768px
-- **Tablet**: 480px - 768px
-- **Mobile**: < 480px
-
-## 🎓 Pädagogischer Wert
-
-Diese Quiz-Website ist ideal für:
-- Englischlernende, die Unterschiede zwischen amerikanischem und britischem Englisch verstehen möchten
-- Schüler, die sich auf einen Auslandsaufenthalt vorbereiten
-- Lehrer, die Unterrichtsmaterial über Schulsysteme benötigen
-- Alle, die sich für interkulturelle Bildungsunterschiede interessieren
-
-## 🔮 Mögliche zukünftige Erweiterungen
-
-- [ ] Zeitmessung für jede Frage
-- [ ] Highscore-Tabelle mit localStorage
-- [ ] Schwierigkeitsstufen (Leicht/Mittel/Schwer)
-- [ ] Mehr Fragen zu anderen Bildungsaspekten
-- [ ] Audio-Aussprache von englischen Begriffen
-- [ ] Teilen-Funktion für soziale Medien
-- [ ] Dunkler Modus (Dark Mode)
-- [ ] Mehrsprachige Unterstützung
-- [ ] Quiz-Kategorien auswählen können
-
-## 📄 Lizenz
-
-Dieses Projekt ist für Bildungszwecke erstellt und frei verwendbar.
-
-## 👨‍💻 Entwicklung
-
-Das Projekt verwendet:
-- Objektorientiertes JavaScript (ES6+ Class)
-- Moderne CSS-Features (Flexbox, Grid, Custom Properties)
-- Saubere, wartbare Code-Struktur
-- Kommentierter Code für bessere Verständlichkeit
-
-## 🤝 Beitrag
-
-Vorschläge zur Verbesserung sind willkommen! Mögliche Bereiche:
-- Neue Quizfragen
-- Zusätzliche Funktionen
-- Design-Verbesserungen
-- Performance-Optimierungen
-
----
-
-**Viel Spaß beim Quizzen! 🎉**
-
-Teste dein Wissen über amerikanische und britische High Schools und lerne die spannenden Unterschiede zwischen beiden Systemen kennen!
+// Initialize quiz when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    const quiz = new QuizApp();
+});
